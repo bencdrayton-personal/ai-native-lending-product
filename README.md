@@ -59,6 +59,6 @@ Milestone tracker     →  the customer-facing view that aligns the cross-functi
 
 ## About
 
-Ben Drayton. Director, Pomona Property Group. Previously: Senior PM at UBank, Honey, Employment Hero. 14 years in regulated financial services and enterprise SaaS. Based in Sydney.
+Ben Drayton. Previously: Senior PM at UBank, Honey, Employment Hero. 14 years in regulated financial services and enterprise SaaS. Based in Sydney.
 
 [LinkedIn](https://www.linkedin.com/in/bendrayton) · bencdrayton@gmail.com

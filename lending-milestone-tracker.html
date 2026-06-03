@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lending Journey Milestone Tracker · Constantinople</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #08080f;
+            color: #e0e0ec;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            font-size: 14px;
+            min-height: 100vh;
+            padding: 36px 24px;
+        }
+        .container { max-width: 960px; margin: 0 auto; }
+
+        header { margin-bottom: 36px; }
+        .header-label {
+            font-size: 11px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: #7c6fe0;
+            margin-bottom: 8px;
+        }
+        h1 { font-size: 26px; font-weight: 600; color: #fff; margin-bottom: 8px; }
+        .subtitle {
+            color: #5a5a70;
+            font-size: 13px;
+            line-height: 1.65;
+            max-width: 700px;
+        }
+
+        .toggle-wrapper {
+            display: inline-flex;
+            background: #12121c;
+            border: 1px solid #1e1e2e;
+            border-radius: 100px;
+            padding: 4px;
+            margin-bottom: 28px;
+        }
+        .toggle-option {
+            padding: 8px 22px;
+            border-radius: 100px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            color: #4a4a60;
+            transition: all 0.2s;
+            user-select: none;
+        }
+        .toggle-option.active { background: #7c6fe0; color: #fff; }
+
+        .metrics-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        .metric-card {
+            background: #12121c;
+            border: 1px solid #1a1a28;
+            border-radius: 10px;
+            padding: 18px 16px;
+        }
+        .metric-label {
+            font-size: 10px;
+            color: #4a4a60;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 8px;
+        }
+        .metric-value {
+            font-size: 26px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 4px;
+            transition: all 0.25s;
+        }
+        .metric-delta { font-size: 11px; font-weight: 500; }
+        .positive { color: #4ade80; }
+        .negative { color: #f87171; }
+        .neutral  { color: #4a4a60; }
+
+        .card {
+            background: #12121c;
+            border: 1px solid #1a1a28;
+            border-radius: 10px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+        .card-title {
+            font-size: 10px;
+            font-weight: 700;
+            color: #4a4a60;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 20px;
+        }
+
+        table { width: 100%; border-collapse: collapse; }
+        th {
+            text-align: left;
+            font-size: 10px;
+            font-weight: 700;
+            color: #3a3a50;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            padding: 0 12px 12px;
+            border-bottom: 1px solid #1a1a28;
+        }
+        td {
+            padding: 14px 12px;
+            border-bottom: 1px solid #111120;
+            vertical-align: middle;
+        }
+        tr:last-child td { border-bottom: none; }
+
+        .stage-name {
+            font-weight: 600;
+            color: #c0c0d8;
+            font-size: 13px;
+        }
+        .stage-badges { margin-top: 4px; display: flex; gap: 5px; flex-wrap: wrap; }
+        .badge {
+            display: inline-block;
+            padding: 2px 7px;
+            border-radius: 4px;
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+        .badge-red    { background: rgba(248,113,113,0.12); color: #f87171; }
+        .badge-purple { background: rgba(124,111,224,0.15); color: #9d94e8; }
+
+        .count-main { font-size: 18px; font-weight: 700; color: #fff; }
+        .count-sub  { font-size: 11px; color: #3a3a50; margin-top: 2px; }
+
+        .time-pill {
+            display: inline-block;
+            padding: 4px 11px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+        .t-slow    { background: rgba(248,113,113,0.1); color: #f87171; }
+        .t-fast    { background: rgba(74,222,128,0.1);  color: #4ade80; }
+        .t-neutral { background: #1a1a28; color: #4a4a60; }
+
+        .driver { font-size: 12px; color: #4a4a70; line-height: 1.6; }
+        .driver.win { color: #9d94e8; }
+
+        .insight-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .insight-card {
+            background: #0e0e1a;
+            border: 1px solid #1a1a28;
+            border-radius: 10px;
+            padding: 18px;
+        }
+        .insight-card h3 {
+            font-size: 12px;
+            font-weight: 600;
+            color: #6a6a80;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+        .insight-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            margin-bottom: 8px;
+            font-size: 12px;
+            line-height: 1.5;
+            color: #4a4a60;
+        }
+        .insight-item .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            margin-top: 5px;
+            flex-shrink: 0;
+        }
+        .dot-red    { background: #f87171; }
+        .dot-purple { background: #7c6fe0; }
+        .dot-green  { background: #4ade80; }
+
+        footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #111120;
+            color: #2a2a3a;
+            font-size: 11px;
+            line-height: 1.8;
+        }
+
+        @media (max-width: 640px) {
+            .metrics-row { grid-template-columns: repeat(2,1fr); }
+            .insight-row { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <header>
+        <div class="header-label">Product Strategy · Lending · Constantinople</div>
+        <h1>Lending Journey Milestone Tracker</h1>
+        <p class="subtitle">Customer milestone analysis for an AI-native retail personal lending product. Starting population: 1,000 applicants entering the top of funnel. Toggle to compare borrower conversion through a legacy bank versus Constantinople's AI-native platform.</p>
+    </header>
+
+    <div class="toggle-wrapper">
+        <div class="toggle-option active" id="opt-legacy" onclick="setMode('legacy')">Legacy Bank</div>
+        <div class="toggle-option" id="opt-cxnpl" onclick="setMode('cxnpl')">Constantinople Platform</div>
+    </div>
+
+    <!-- KPI cards -->
+    <div class="metrics-row">
+        <div class="metric-card">
+            <div class="metric-label">End-to-end conversion</div>
+            <div class="metric-value" id="m-conv">13.3%</div>
+            <div class="metric-delta neutral" id="d-conv">Industry avg. online loan</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">Time to conditional approval</div>
+            <div class="metric-value" id="m-tca">4.2 days</div>
+            <div class="metric-delta neutral" id="d-tca">Submit → decision</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">STP rate</div>
+            <div class="metric-value" id="m-stp">22%</div>
+            <div class="metric-delta neutral" id="d-stp">Typical traditional bank</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">Cost per application</div>
+            <div class="metric-value" id="m-cost">$185</div>
+            <div class="metric-delta neutral" id="d-cost">Majority manual assessment</div>
+        </div>
+    </div>
+
+    <!-- Chart -->
+    <div class="card">
+        <div class="card-title">Funnel: Borrowers at each milestone (starting from 1,000)</div>
+        <canvas id="chart" height="260"></canvas>
+    </div>
+
+    <!-- Stage table -->
+    <div class="card">
+        <div class="card-title">Stage Breakdown</div>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width:22%">Stage</th>
+                    <th style="width:14%">Borrowers</th>
+                    <th style="width:16%">Time at stage</th>
+                    <th>Key driver</th>
+                </tr>
+            </thead>
+            <tbody id="tbl"></tbody>
+        </table>
+    </div>
+
+    <!-- Insight panels -->
+    <div class="insight-row">
+        <div class="insight-card">
+            <h3>Where the funnel breaks</h3>
+            <div class="insight-item">
+                <div class="dot dot-red"></div>
+                <div>Document upload (income verification) is the single largest drop-off. Borrowers who hit the upload step and idle for 5+ minutes abandon at high rates.</div>
+            </div>
+            <div class="insight-item">
+                <div class="dot dot-red"></div>
+                <div>Wait time during credit assessment causes a second wave of attrition. Borrowers find alternatives or lose momentum over 1–4 business days.</div>
+            </div>
+            <div class="insight-item">
+                <div class="dot dot-red"></div>
+                <div>Manual underwriting costs $150–300 per application regardless of outcome. At 22% STP, ~78% of volume carries full manual cost.</div>
+            </div>
+        </div>
+        <div class="insight-card">
+            <h3 id="panel-title">Roadmap opportunities</h3>
+            <div id="panel-content">
+                <div class="insight-item">
+                    <div class="dot dot-purple"></div>
+                    <div><strong style="color:#9d94e8">CDR consent flow:</strong> replace document upload with live bank data pull. Eliminates the primary abandonment bottleneck at Stage 3.</div>
+                </div>
+                <div class="insight-item">
+                    <div class="dot dot-purple"></div>
+                    <div><strong style="color:#9d94e8">AI decisioning engine:</strong> auto-approve/decline standard applications in &lt;30 min. Eliminates the 1–2 day analyst queue at Stage 5.</div>
+                </div>
+                <div class="insight-item">
+                    <div class="dot dot-purple"></div>
+                    <div><strong style="color:#9d94e8">Streamlined settlement:</strong> reduce drawdown lag from 3–5 days to 1–2 days. Captures conversion lost in the final mile.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        Benchmark sources: 68% online financial services application abandonment rate (ResolvePay, 2024); document upload confirmed as primary abandonment trigger; idle time on upload step is the key behavioural signal (Kommunicate, Lightico, Plaid 2024–25); leading digital lenders achieve 80–90% STP vs ~22% for traditional banks (Pennant Technologies 2025); manual underwriting $150–$300 per application vs $5–$15 for STP applications (Pennant Technologies 2025); personal loan approval rate ~65% of submitted applications (Pennant / NextGen 2025); CDR adoption in Australia confirmed as low; government simplifying consent rules in 2026 to improve uptake (ACCC, CDR.gov.au, 2025). Stage-level drop-off modelled from NextGen Australian Lending Technology 2026 report and public digital lender benchmarks. Built by Ben Drayton as pre-work for the Senior PM – Lending role at Constantinople. Not proprietary Constantinople data.
+    </footer>
+
+</div>
+<script>
+const stages = [
+    "Awareness / Landing",
+    "Begin Application",
+    "Submit Application",
+    "Income Verification",
+    "Credit Decision",
+    "Offer Accepted",
+    "Drawdown / Funded"
+];
+
+const data = {
+    legacy: {
+        counts:  [1000, 600, 330, 231, 208, 156, 133],
+        times:   ["N/A", "~5 min", "15–25 min", "2–4 bus. days", "1–2 bus. days", "1 day", "3–5 days"],
+        speed:   ["n","n","n","slow","slow","n","slow"],
+        flags:   [null, null, "bottleneck", "bottleneck", null, null, null],
+        drivers: [
+            "Top-of-funnel entry, platform-agnostic. Driven by marketing, brand, and product-market fit.",
+            "40% bounce on landing: offer clarity, eligibility messaging, and application CTA effectiveness.",
+            "~45% abandon during the form. Primary cause: document upload step: payslips, bank statements. Idle time >5 min is the key drop-off trigger (Kommunicate, 2025).",
+            "Applicants wait 2–4 days for a credit analyst to manually review uploaded documents. A share disengage during the wait or find an alternative.",
+            "Credit analyst queue: applications reviewed and decisioned manually. 1–2 bus. day lag from submission to outcome.",
+            "~25% of those approved don't accept; rate competitiveness, confidence gap, or alternative found during the wait window.",
+            "Legal, title-search, and settlement coordination. 3–5 business day lag from acceptance to funded loan."
+        ]
+    },
+    cxnpl: {
+        counts:  [1000, 600, 420, 378, 360, 288, 255],
+        times:   ["N/A", "~5 min", "8–10 min", "< 5 min", "< 30 min", "Same day", "1–2 days"],
+        speed:   ["n","n","fast","fast","fast","fast","fast"],
+        flags:   [null, null, "platform win", "platform win", "platform win", null, "platform win"],
+        drivers: [
+            "Top-of-funnel entry, unchanged. Platform does not change acquisition; it changes what happens after the applicant arrives.",
+            "40% bounce on landing, unchanged. Top-of-funnel is a marketing and product-fit problem, not a platform problem.",
+            "30% form abandonment (vs. 45%). CDR consent replaces document upload for consenting applicants: shorter form, no idle wait at upload step.",
+            "CDR consent pulls live bank transaction data in seconds. Income/expense profile generated instantly. Primary bottleneck eliminated.",
+            "AI decisioning engine auto-approves or declines standard applications within 30 min. Complex cases refer to a banker with full context pre-populated in Justinian.",
+            "Faster decisions correlate with higher acceptance; borrower confidence is higher when outcome arrives same-day rather than days later.",
+            "Streamlined settlement pipeline for standard personal loans. Reduced manual solicitor coordination. 1–2 day funded lag vs. 3–5."
+        ]
+    }
+};
+
+const metrics = {
+    legacy: {
+        conv:"13.3%", tca:"4.2 days", stp:"22%", cost:"$185",
+        dconv:"Industry avg. for online loans",
+        dtca:"Submit → decision",
+        dstp:"Typical traditional bank",
+        dcost:"Majority manual assessment",
+        cls: "negative"
+    },
+    cxnpl: {
+        conv:"25.5%", tca:"< 30 min", stp:"85%", cost:"$35",
+        dconv:"↑ 92% lift vs. legacy baseline",
+        dtca:"↓ Days reduced to minutes",
+        dstp:"↑ Top-quartile digital platform",
+        dcost:"↓ 81% reduction per application",
+        cls: "positive"
+    }
+};
+
+const panelContent = {
+    legacy: {
+        title: "Roadmap opportunities",
+        items: [
+            { dot:"purple", text:"<strong style='color:#9d94e8'>CDR consent flow:</strong> replace document upload with live bank data pull. Eliminates the primary abandonment bottleneck at Stage 3." },
+            { dot:"purple", text:"<strong style='color:#9d94e8'>AI decisioning engine:</strong> auto-approve/decline standard applications in &lt;30 min. Eliminates the 1–2 day analyst queue at Stage 5." },
+            { dot:"purple", text:"<strong style='color:#9d94e8'>Streamlined settlement:</strong> reduce drawdown lag from 3–5 days to 1–2 days. Captures conversion lost in the final mile." }
+        ]
+    },
+    cxnpl: {
+        title: "What the platform delivers",
+        items: [
+            { dot:"green", text:"<strong style='color:#4ade80'>+92% end-to-end conversion:</strong> from 13.3% to 25.5% across 1,000 entries. The biggest gains come from eliminating the document upload wall and the analyst wait." },
+            { dot:"green", text:"<strong style='color:#4ade80'>81% cost reduction:</strong> from $185 to $35 per application. At scale (10,000 applications/month), that's ~$1.5M annual ops saving for the bank client." },
+            { dot:"green", text:"<strong style='color:#4ade80'>Decision quality maintained.</strong> CDR income data is more accurate than payslip review for irregular earners. Higher STP does not mean looser credit." }
+        ]
+    }
+};
+
+let mode = "legacy";
+let chart;
+
+function setMode(m) {
+    mode = m;
+    document.getElementById("opt-legacy").classList.toggle("active", m==="legacy");
+    document.getElementById("opt-cxnpl").classList.toggle("active", m==="cxnpl");
+    render();
+}
+
+function render() {
+    const d = data[mode];
+    const mx = metrics[mode];
+    const pc = panelContent[mode];
+
+    // Metrics
+    document.getElementById("m-conv").textContent = mx.conv;
+    document.getElementById("m-tca").textContent  = mx.tca;
+    document.getElementById("m-stp").textContent  = mx.stp;
+    document.getElementById("m-cost").textContent = mx.cost;
+    ["conv","tca","stp","cost"].forEach(k => {
+        const el = document.getElementById("d-"+k);
+        el.textContent = mx["d"+k];
+        el.className = "metric-delta " + mx.cls;
+    });
+
+    // Chart
+    const isLegacy = mode === "legacy";
+    chart.data.datasets[0].data = d.counts;
+    chart.data.datasets[0].backgroundColor = isLegacy ? "rgba(248,113,113,0.6)" : "rgba(124,111,224,0.7)";
+    chart.data.datasets[0].borderColor      = isLegacy ? "#f87171" : "#7c6fe0";
+    chart.update();
+
+    // Table
+    const tbody = document.getElementById("tbl");
+    tbody.innerHTML = "";
+    d.counts.forEach((n, i) => {
+        const prev = i > 0 ? d.counts[i-1] : null;
+        const drop    = prev ? prev - n : null;
+        const dropPct = prev ? Math.round((drop/prev)*100) : null;
+        const flag    = d.flags[i];
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>
+                <div class="stage-name">${stages[i]}</div>
+                <div class="stage-badges">
+                    ${flag === "bottleneck"   ? '<span class="badge badge-red">Bottleneck</span>'    : ""}
+                    ${flag === "platform win" ? '<span class="badge badge-purple">Platform win</span>' : ""}
+                </div>
+            </td>
+            <td>
+                <div class="count-main">${n.toLocaleString()}</div>
+                ${drop !== null ? `<div class="count-sub">−${drop.toLocaleString()} dropped (${dropPct}%)</div>` : ""}
+            </td>
+            <td>
+                <span class="time-pill ${d.speed[i]==="fast"?"t-fast":d.speed[i]==="slow"?"t-slow":"t-neutral"}">${d.times[i]}</span>
+            </td>
+            <td><div class="driver${flag==="platform win"?" win":""}">${d.drivers[i]}</div></td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    // Insight panel
+    document.getElementById("panel-title").textContent = pc.title;
+    document.getElementById("panel-content").innerHTML = pc.items.map(item =>
+        `<div class="insight-item">
+            <div class="dot dot-${item.dot}"></div>
+            <div>${item.text}</div>
+        </div>`
+    ).join("");
+}
+
+window.addEventListener("DOMContentLoaded", () => {
+    const ctx = document.getElementById("chart").getContext("2d");
+    chart = new Chart(ctx, {
+        type: "bar",
+        data: {
+            labels: stages,
+            datasets: [{
+                data: data.legacy.counts,
+                backgroundColor: "rgba(248,113,113,0.6)",
+                borderColor: "#f87171",
+                borderWidth: 1,
+                borderRadius: 4
+            }]
+        },
+        options: {
+            indexAxis: "y",
+            responsive: true,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: "#1a1a28",
+                    titleColor: "#a0a0b4",
+                    bodyColor: "#e0e0ec",
+                    callbacks: {
+                        label: ctx => {
+                            const v = ctx.parsed.x;
+                            return ` ${v.toLocaleString()} borrowers: ${Math.round(v/10)}% of original 1,000`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    max: 1100,
+                    grid: { color: "#141422" },
+                    ticks: { color: "#3a3a50" }
+                },
+                y: {
+                    grid: { display: false },
+                    ticks: { color: "#6a6a84", font: { size: 12 } }
+                }
+            },
+            animation: { duration: 350 }
+        }
+    });
+    render();
+});
+</script>
+</body>
+</html>
